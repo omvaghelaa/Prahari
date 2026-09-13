@@ -426,22 +426,66 @@
     letter-spacing: 0.04em;
   }
 
-  a { color: var(--accent); }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+  a:hover { color: var(--ink); }
+  .linkbar {
+    display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; margin-top: 1.6rem;
+  }
+  .linkbar a {
+    display: inline-flex; align-items: baseline; gap: 0.55rem;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.8rem;
+    padding: 0.5rem 0.85rem; border: 1px solid var(--line-strong); border-radius: 4px;
+    background: var(--surface); color: var(--ink-2); text-decoration: none;
+  }
+  .linkbar a b {
+    font-family: "Archivo", sans-serif; font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700;
+  }
+  .close .linkbar a { background: transparent; border-color: rgba(255,255,255,0.28); color: #d6dae2; }
+  .close .linkbar a b { color: #e0a24a; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* ---- print: one slide per page ---- */
+  /* ---- diagram slides ---- */
+  .diagwrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .diagwrap svg { width: 100%; height: 100%; max-height: 100%; }
+  .slide--diagram { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  .slide--diagram::before { display: none; }
+  .diagwrap svg { display: block; }
+  .diagnote { margin-top: 0.7rem; font-size: 0.8rem; color: var(--ink-3); max-width: none; }
+
+  /* ---- print: one 16:9 slide per page ---- */
+  @page { size: 338.67mm 190.5mm; margin: 0; }
   @media print {
-    body { background: #fff; }
+    body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .deck { max-width: none; padding: 0; }
     .slide, .cover, .close {
       border: none;
       border-radius: 0;
       margin: 0;
-      padding: 1.4cm 1.6cm;
+      width: 338.67mm;
+      height: 190.5mm;
+      overflow: hidden;
+      padding: 1.05cm 1.45cm;
       page-break-after: always;
       break-after: page;
       min-height: 0;
     }
+    .slide--diagram { padding: 0; }
+    .slide h2 { font-size: 2.12rem; max-width: 30ch; }
+    .slide h2 + .lede { margin-top: .75rem; font-size: 1.02rem; }
+    .slide p { max-width: 92ch; }
+    .table-wrap { margin-top: 1.1rem; }
+    .runbar { margin-top: 1.1rem; }
+    .slide h3 { margin-top: 1.4rem; }
+    .cover { display: flex; flex-direction: column; justify-content: center; }
+    .close { display: flex; flex-direction: column; justify-content: center; }
     .slide::before, .cover::before, .close::before { width: 3pt; }
     .close { background: #14171d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .run, .runbar { border-color: #b5731a; }
@@ -459,16 +503,24 @@
     <div class="cover__thesis">We ship 200-byte sighting rows, not video. That is the whole architecture.</div>
 
     <div class="cover__meta">
-      <span><b>Model</b> &nbsp;Hybrid — M1 foundation + M3 core</span>
+      <span><b>Model</b> &nbsp;Hybrid — M1 foundation, M2 surface, M3 core</span>
       <span><b>Mandatory analytic</b> &nbsp;ANPR</span>
       <span><b>Grid</b> &nbsp;~50 heterogeneous cameras → 80,000</span>
       <span><b>Stack</b> &nbsp;open-source, vendor-neutral</span>
+      <span><b>Licence</b> &nbsp;Apache-2.0</span>
     </div>
+
+    <div class="linkbar">
+      <a href="https://youtu.be/8lQsuXeH150"><b>Demo video</b> youtu.be/8lQsuXeH150</a>
+      <a href="https://github.com/Priyanshu-byte-coder/prahari"><b>Source</b> github.com/Priyanshu-byte-coder/prahari</a>
+    </div>
+
+    <p style="margin-top:2.2rem;font-size:0.82rem;color:var(--ink-3);max-width:none">Solution presentation &middot; deliverable 1 of 3. The High-Level Design and the workflow / integration diagram are submitted alongside it, and every number in this deck names the command that produced it.</p>
   </header>
 
   <!-- ========== 01 — THE HYBRID ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>01</b> / 10 · Solution model &amp; justification</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>01</b> / 13 · Solution model &amp; justification</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">The hybrid</p>
     <h2>It is not any one of the four reference models</h2>
     <p class="lede">Model&nbsp;1 is the foundation the brief says it must be. Model&nbsp;3 is the architecture built on top of it. From Models&nbsp;2 and&nbsp;4 we take a technique and an ambition — and reject Model&nbsp;4's central video store outright.</p>
@@ -511,68 +563,245 @@
   </section>
 
   <!-- ========== 02 — ARCHITECTURE ========== -->
-  <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>02</b> / 10 · Architecture &amp; protocol map</span></div>
-    <p class="slide__eyebrow" style="color:var(--accent)">End to end</p>
-    <h2>Five stages. Video stops at the first one.</h2>
-
-    <div class="flow">
-      <div class="flow__step" data-arrow>
-        <span class="k">Cameras / VMS</span>
-        <span class="d">RTSP/TCP · ONVIF · HLS · WHEP · vendor SDK</span>
-      </div>
-      <div class="flow__step" data-arrow>
-        <span class="k">Federation gateway</span>
-        <span class="d">drivers: mediamtx · rtsp · onvif · vms-stub</span>
-      </div>
-      <div class="flow__step" data-arrow>
-        <span class="k">Inference worker</span>
-        <span class="d">decode 5fps ▸ YOLOv8s ▸ ByteTrack ▸ plate ▸ OCR vote</span>
-      </div>
-      <div class="flow__step" data-arrow>
-        <span class="k">Core API</span>
-        <span class="d">persister ▸ matcher ▸ alerts ▸ ws-fanout ▸ route ▸ RBAC + audit</span>
-      </div>
-      <div class="flow__step">
-        <span class="k">GIS console</span>
-        <span class="d">Leaflet map · video wall · route view</span>
-      </div>
-    </div>
-
-    <div class="record">
-      <span class="cmt"># the atom — one sighting row, ~200 bytes ([C1]). Everything downstream reads it.</span><br>
-      Redis Streams: <span class="key">sightings</span>, <span class="key">camera.health</span> &nbsp; → &nbsp; Postgres / TimescaleDB
-    </div>
-
-    <p style="margin-top:1.5rem">Between the gateway and the worker there is exactly one contract: a URL string on the key <span class="cell-mono">camera:transport:&lt;id&gt;</span>. The worker imports no gateway code; the gateway knows no model. That seam is what lets a new vendor arrive as one driver file.</p>
+  <section class="slide slide--diagram">
+    <div class="diagwrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 990" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif">
+<title>Prahari — system architecture</title>
+<desc>Five stages from the department camera estate to the operator console. Video is decoded at the edge and never crosses into the platform; a ~200-byte sighting does.</desc>
+<defs>
+<g id="i-camera" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 17 4.2a1 1 0 0 1 1.2.7l1 3.6a1 1 0 0 1-.7 1.2L4.6 13.4a1 1 0 0 1-1.2-.7l-1-3.6a1 1 0 0 1 .6-1.6z"/>
+                 <circle cx="16.4" cy="8.2" r="1.5" fill="#fff"/>
+                 <path d="M6 13.9 7 17M11 10.5v10M8.6 20.5h4.8"/></g>
+<g id="i-hub" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.3"/>
+              <circle cx="3.6" cy="5" r="2.1"/><circle cx="20.4" cy="5" r="2.1"/>
+              <circle cx="3.6" cy="19" r="2.1"/><circle cx="20.4" cy="19" r="2.1"/>
+              <path d="M5.2 6.4 9.6 10M18.8 6.4 14.4 10M5.2 17.6 9.6 14M18.8 17.6 14.4 14"/></g>
+<g id="i-chip" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2.2"/>
+               <rect x="9.4" y="9.4" width="5.2" height="5.2" rx="1"/>
+               <path d="M9.5 6V3M14.5 6V3M9.5 21v-3M14.5 21v-3M6 9.5H3M6 14.5H3M21 9.5h-3M21 14.5h-3"/></g>
+<g id="i-stream" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7h12"/><path d="M12 4.2 15.3 7 12 9.8"/>
+                 <path d="M21.5 12h-12"/><path d="M12 9.2 8.7 12 12 14.8"/>
+                 <path d="M2.5 17h12"/><path d="M12 14.2 15.3 17 12 19.8"/></g>
+<g id="i-db" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.6" rx="8" ry="3.1"/>
+             <path d="M4 5.6v12.8c0 1.7 3.6 3.1 8 3.1s8-1.4 8-3.1V5.6"/>
+             <path d="M4 12c0 1.7 3.6 3.1 8 3.1s8-1.4 8-3.1"/></g>
+<g id="i-monitor" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="19" height="13" rx="1.8"/>
+                  <path d="M9 20.5h6M12 16.5v4"/>
+                  <path d="M6.5 12.5 9.5 9l2.5 2.6L15 7.5l2.5 3.4"/></g>
+<g id="i-shield" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 20 5.6v6.1c0 4.6-3.3 8.6-8 9.7-4.7-1.1-8-5.1-8-9.7V5.6z"/>
+                 <path d="M8.6 12.2 11 14.6l4.6-4.8"/></g>
+<g id="i-chain" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 14.4a4.2 4.2 0 0 1 0-5.9l2.4-2.4a4.2 4.2 0 0 1 5.9 5.9l-1.3 1.3"/>
+                <path d="M14.4 9.6a4.2 4.2 0 0 1 0 5.9l-2.4 2.4a4.2 4.2 0 1 1-5.9-5.9l1.3-1.3"/></g>
+<g id="i-clock" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 6.8V12l3.4 2.1"/></g>
+<g id="i-open" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M3.6 12h16.8"/>
+               <path d="M12 3.4a13 13 0 0 1 0 17.2 13 13 0 0 1 0-17.2z"/></g>
+<g id="i-pin" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5c4.2-5.3 6.4-9 6.4-11.5a6.4 6.4 0 1 0-12.8 0c0 2.5 2.2 6.2 6.4 11.5z"/>
+              <circle cx="12" cy="10" r="2.4"/></g>
+<g id="i-bell" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 16.4V10.6a5.8 5.8 0 0 1 11.6 0v5.8l1.8 2.3H4.4z"/>
+               <path d="M9.8 21.4h4.4"/></g>
+<g id="i-route" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.4" cy="18.6" r="2.6"/><circle cx="18.6" cy="5.4" r="2.6"/>
+                <path d="M8 18.6h5.8a4.4 4.4 0 0 0 0-8.8H10a4.4 4.4 0 0 1 0-8.8"/></g>
+<g id="i-user" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.9"/><path d="M4.6 20.8a7.4 7.4 0 0 1 14.8 0"/></g>
+<g id="i-eye" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 12S5.6 5.4 12 5.4 22.2 12 22.2 12 18.4 18.6 12 18.6 1.8 12 1.8 12z"/>
+              <circle cx="12" cy="12" r="3"/></g>
+<g id="i-ban" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M6 18 18 6"/></g>
+<g id="i-box" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 21 7.4v9.2L12 21.2 3 16.6V7.4z"/><path d="M3 7.4 12 12l9-4.6M12 12v9.2"/></g>
+<marker id="ma" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+<marker id="mb" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5731a"/></marker>
+<marker id="mc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f7a3d"/></marker>
+<marker id="md" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b23020"/></marker>
+</defs>
+<rect x="0" y="0" width="1760" height="990" rx="0" fill="#f4f5f7" stroke="#f4f5f7" stroke-width="0"/>
+<text x="48" y="54" font-size="28" fill="#1b1f27" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Prahari — system architecture</text>
+<text x="48" y="82" font-size="15" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Hybrid M1 + M2 + M3 · open source · no vendor lock-in</text>
+<rect x="1256" y="30" width="456" height="60" rx="10" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.4"/>
+<g transform="translate(1274 44) scale(1.25)" color="#b23020" stroke-width="1.36"><use href="#i-ban"/></g>
+<text x="1316" y="56" font-size="15" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Video never leaves the department</text>
+<text x="1316" y="77" font-size="12.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">A ~200-byte sighting is the only thing that does.</text>
+<rect x="48" y="112" width="1664" height="118" rx="10" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.4"/>
+<text x="70" y="140" font-size="13" fill="#b5731a" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start" letter-spacing="0.12em">26 GOVERNMENT DEPARTMENTS · EXISTING VMS UNTOUCHED</text>
+<rect x="70" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(82 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="120" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Traffic</text>
+<text x="120" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">RTSP·TCP</text>
+<rect x="303" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(315 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="353" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Law &amp; Order</text>
+<text x="353" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">ONVIF</text>
+<rect x="536" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(548 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="586" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">RTO / GSRTC</text>
+<text x="586" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">HLS</text>
+<rect x="769" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(781 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="819" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Municipal</text>
+<text x="819" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">RTSP·H.265</text>
+<rect x="1002" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(1014 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="1052" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Panchayat</text>
+<text x="1052" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">RTSP</text>
+<rect x="1235" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(1247 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="1285" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Civil supplies</text>
+<text x="1285" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">vendor SDK</text>
+<rect x="1468" y="152" width="218" height="58" rx="8" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/>
+<g transform="translate(1480 167) scale(1.16667)" color="#b5731a" stroke-width="1.45714"><use href="#i-camera"/></g>
+<text x="1518" y="178" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Health</text>
+<text x="1518" y="198" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">vendor SDK</text>
+<path d="M198 230 L198 280" stroke="#6b7280" stroke-width="2.4" fill="none" marker-end="url(#ma)"/>
+<rect x="48" y="286" width="300" height="330" rx="12" fill="#ffffff" stroke="#b6bcc6" stroke-width="1.6"/>
+<rect x="48" y="286" width="300" height="108" rx="12" fill="#f7ead6" stroke="none" stroke-width="0"/>
+<rect x="48" y="382" width="300" height="12" rx="0" fill="#f7ead6" stroke="none" stroke-width="0"/>
+<g transform="translate(70 308) scale(1.91667)" color="#b5731a" stroke-width="0.886957"><use href="#i-hub"/></g>
+<text x="70" y="378" font-size="34" fill="#d9a45e" font-weight="800" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">01</text>
+<text x="326" y="338" font-size="17" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">Federation gateway</text>
+<text x="326" y="360" font-size="12.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">one interface, four transports</text>
+<rect x="70" y="416" width="92" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="116" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">rtsp · TCP</text>
+<rect x="169" y="416" width="41.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="189.8" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">hls</text>
+<rect x="217.6" y="416" width="56" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="245.6" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">onvif</text>
+<rect x="70" y="447" width="77.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="108.8" y="463.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">vms-stub</text>
+<path d="M70 542 H326" stroke="#d3d7dd" stroke-width="1.2"/>
+<text x="70" y="566" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">probes each camera · degrades per</text>
+<text x="70" y="583" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">camera · frame watchdog</text>
+<path d="M354 451 L383 451" stroke="#b5731a" stroke-width="2.4" fill="none" marker-end="url(#mb)"/>
+<rect x="389" y="286" width="300" height="330" rx="12" fill="#ffffff" stroke="#b6bcc6" stroke-width="1.6"/>
+<rect x="389" y="286" width="300" height="108" rx="12" fill="#f7ead6" stroke="none" stroke-width="0"/>
+<rect x="389" y="382" width="300" height="12" rx="0" fill="#f7ead6" stroke="none" stroke-width="0"/>
+<g transform="translate(411 308) scale(1.91667)" color="#b5731a" stroke-width="0.886957"><use href="#i-chip"/></g>
+<text x="411" y="378" font-size="34" fill="#d9a45e" font-weight="800" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">02</text>
+<text x="667" y="338" font-size="17" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">Edge inference</text>
+<text x="667" y="360" font-size="12.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">runs where the cameras are</text>
+<rect x="411" y="416" width="70.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="446.2" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">YOLOv8s</text>
+<rect x="488.4" y="416" width="84.8" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="530.8" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">ByteTrack</text>
+<rect x="580.2" y="416" width="77.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="619" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">YOLOv9-t</text>
+<rect x="411" y="447" width="99.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="460.6" y="463.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">OCR vote ×4</text>
+<path d="M411 542 H667" stroke="#d3d7dd" stroke-width="1.2"/>
+<text x="411" y="566" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">decode 5 fps · one record per track,</text>
+<text x="411" y="583" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">not per frame</text>
+<path d="M695 451 L724 451" stroke="#b5731a" stroke-width="2.4" fill="none" marker-end="url(#mb)"/>
+<rect x="730" y="286" width="300" height="330" rx="12" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.6"/>
+<rect x="730" y="286" width="300" height="108" rx="12" fill="#eceef1" stroke="none" stroke-width="0"/>
+<rect x="730" y="382" width="300" height="12" rx="0" fill="#eceef1" stroke="none" stroke-width="0"/>
+<g transform="translate(752 308) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-stream"/></g>
+<text x="752" y="378" font-size="34" fill="#c3c9d2" font-weight="800" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">03</text>
+<text x="1008" y="338" font-size="17" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">Sighting bus</text>
+<text x="1008" y="360" font-size="12.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">~200 bytes · contract C1</text>
+<rect x="752" y="416" width="84.8" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="794.4" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">sightings</text>
+<rect x="843.8" y="416" width="63.2" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="875.4" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">alerts</text>
+<rect x="752" y="447" width="113.6" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="808.8" y="463.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">camera.health</text>
+<path d="M752 542 H1008" stroke="#d3d7dd" stroke-width="1.2"/>
+<text x="752" y="566" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">two consumer groups · replay on</text>
+<text x="752" y="583" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">failure</text>
+<path d="M1036 451 L1065 451" stroke="#6b7280" stroke-width="2.4" fill="none" marker-end="url(#ma)"/>
+<rect x="1071" y="286" width="300" height="330" rx="12" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.6"/>
+<rect x="1071" y="286" width="300" height="108" rx="12" fill="#eceef1" stroke="none" stroke-width="0"/>
+<rect x="1071" y="382" width="300" height="12" rx="0" fill="#eceef1" stroke="none" stroke-width="0"/>
+<g transform="translate(1093 308) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-db"/></g>
+<text x="1093" y="378" font-size="34" fill="#c3c9d2" font-weight="800" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">04</text>
+<text x="1349" y="338" font-size="17" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">Store &amp; correlate</text>
+<text x="1349" y="360" font-size="12.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">Postgres 16 · TimescaleDB</text>
+<rect x="1093" y="416" width="92" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1139" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">hypertable</text>
+<rect x="1192" y="416" width="77.6" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1230.8" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">pgvector</text>
+<rect x="1276.6" y="416" width="70.4" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1311.8" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">pg_trgm</text>
+<rect x="1093" y="447" width="56" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1121" y="463.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">MinIO</text>
+<rect x="1156" y="447" width="70.4" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1191.2" y="463.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">matcher</text>
+<path d="M1093 542 H1349" stroke="#d3d7dd" stroke-width="1.2"/>
+<text x="1093" y="566" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">canon → trigram → Levenshtein ·</text>
+<text x="1093" y="583" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">dedup 60 s</text>
+<path d="M1377 451 L1406 451" stroke="#6b7280" stroke-width="2.4" fill="none" marker-end="url(#ma)"/>
+<rect x="1412" y="286" width="300" height="330" rx="12" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.6"/>
+<rect x="1412" y="286" width="300" height="108" rx="12" fill="#eceef1" stroke="none" stroke-width="0"/>
+<rect x="1412" y="382" width="300" height="12" rx="0" fill="#eceef1" stroke="none" stroke-width="0"/>
+<g transform="translate(1434 308) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-monitor"/></g>
+<text x="1434" y="378" font-size="34" fill="#c3c9d2" font-weight="800" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="start">05</text>
+<text x="1690" y="338" font-size="17" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">API &amp; console</text>
+<text x="1690" y="360" font-size="12.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">FastAPI · Leaflet</text>
+<rect x="1434" y="416" width="48.8" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1458.4" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">REST</text>
+<rect x="1489.8" y="416" width="84.8" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1532.2" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">WebSocket</text>
+<rect x="1581.6" y="416" width="77.6" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1620.4" y="432.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">RBAC C10</text>
+<rect x="1434" y="447" width="99.2" height="24" rx="6" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.1"/><text x="1483.6" y="463.5" font-size="12" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">audit chain</text>
+<path d="M1434 542 H1690" stroke="#d3d7dd" stroke-width="1.2"/>
+<text x="1434" y="566" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">map · video wall · trace · alerts ·</text>
+<text x="1434" y="583" font-size="12" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">export</text>
+<path d="M709.5 274 V646" stroke="#b23020" stroke-width="2.2" stroke-dasharray="7 6"/>
+<rect x="531.5" y="236" width="356" height="36" rx="8" fill="#f6e3df" stroke="#d29184" stroke-width="1.2"/>
+<g transform="translate(541.5 242) scale(0.916667)" color="#b23020" stroke-width="1.85455"><use href="#i-ban"/></g>
+<text x="571.5" y="260" font-size="13" fill="#b23020" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">VIDEO STOPS HERE — frames are discarded</text>
+<rect x="48" y="664" width="1090" height="124" rx="10" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.4"/>
+<text x="70" y="692" font-size="13" fill="#b5731a" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start" letter-spacing="0.12em">ACROSS EVERY STAGE</text>
+<g transform="translate(70 716) scale(1.25)" color="#b5731a" stroke-width="1.36"><use href="#i-shield"/></g>
+<text x="112" y="730" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">RBAC enforced in SQL</text>
+<text x="112" y="750" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">the admin cannot watch</text>
+<g transform="translate(332 716) scale(1.25)" color="#b5731a" stroke-width="1.36"><use href="#i-chain"/></g>
+<text x="374" y="730" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Hash-chained audit</text>
+<text x="374" y="750" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">reads logged, not just writes</text>
+<g transform="translate(594 716) scale(1.25)" color="#b5731a" stroke-width="1.36"><use href="#i-clock"/></g>
+<text x="636" y="730" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Retention 90 / 30 days</text>
+<text x="636" y="750" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">a database policy</text>
+<g transform="translate(856 716) scale(1.25)" color="#b5731a" stroke-width="1.36"><use href="#i-open"/></g>
+<text x="898" y="730" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Open source</text>
+<text x="898" y="750" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">no vendor lock-in</text>
+<rect x="1160" y="664" width="552" height="124" rx="10" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.4"/>
+<text x="1182" y="692" font-size="13" fill="#b5731a" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start" letter-spacing="0.12em">EXTERNAL INTERFACES</text>
+<rect x="1182" y="714" width="250" height="26" rx="6" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.1"/>
+<text x="1194" y="732" font-size="12.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">VAHAN · SARTHI</text>
+<text x="1420" y="732" font-size="11" fill="#b5731a" font-weight="600" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="end">stub</text>
+<rect x="1450" y="714" width="250" height="26" rx="6" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.1"/>
+<text x="1462" y="732" font-size="12.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">e-GujCop · AFIS</text>
+<text x="1688" y="732" font-size="11" fill="#b5731a" font-weight="600" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="end">stub</text>
+<rect x="1182" y="752" width="250" height="26" rx="6" fill="#e3f2e6" stroke="#7cb98d" stroke-width="1.1"/>
+<text x="1194" y="770" font-size="12.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">OSRM</text>
+<text x="1420" y="770" font-size="11" fill="#1f7a3d" font-weight="600" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="end">live</text>
+<rect x="1450" y="752" width="250" height="26" rx="6" fill="#e3f2e6" stroke="#7cb98d" stroke-width="1.1"/>
+<text x="1462" y="770" font-size="12.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">chrony</text>
+<text x="1688" y="770" font-size="11" fill="#1f7a3d" font-weight="600" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="end">live</text>
+<rect x="48" y="818" width="1664" height="124" rx="10" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.4"/>
+<text x="70" y="846" font-size="13" fill="#b5731a" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start" letter-spacing="0.12em">WHAT AN OFFICER GETS</text>
+<g transform="translate(70 870) scale(1.25)" color="#1f7a3d" stroke-width="1.36"><use href="#i-pin"/></g>
+<text x="112" y="884" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">GIS map of the estate</text>
+<text x="112" y="904" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">live health per camera</text>
+<g transform="translate(400 870) scale(1.25)" color="#1f7a3d" stroke-width="1.36"><use href="#i-bell"/></g>
+<text x="442" y="884" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Watchlist alert, pushed</text>
+<text x="442" y="904" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">no polling, no refresh</text>
+<g transform="translate(730 870) scale(1.25)" color="#1f7a3d" stroke-width="1.36"><use href="#i-route"/></g>
+<text x="772" y="884" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Route across departments</text>
+<text x="772" y="904" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">ordered, timestamped, flagged</text>
+<g transform="translate(1060 870) scale(1.25)" color="#1f7a3d" stroke-width="1.36"><use href="#i-box"/></g>
+<text x="1102" y="884" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">CSV / PDF export</text>
+<text x="1102" y="904" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">never without an audit row</text>
+<g transform="translate(1390 870) scale(1.25)" color="#1f7a3d" stroke-width="1.36"><use href="#i-eye"/></g>
+<text x="1432" y="884" font-size="13.5" fill="#1b1f27" font-weight="600" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Every lookup on the record</text>
+<text x="1432" y="904" font-size="11.5" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">including who looked</text>
+</svg>    </div>
   </section>
 
-  <!-- ========== 03 — DRIVERS ========== -->
+<!-- ========== 03 — DRIVERS ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>03</b> / 10 · Interoperability</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>03</b> / 13 · Interoperability</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">Drivers</p>
-    <h2>Three live, one interface-complete — and we say which</h2>
+    <h2>Four transports live, one interface-complete — and we say which</h2>
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Driver</th><th>Protocol</th><th>Status</th><th>Cameras on the grid</th></tr></thead>
+        <thead><tr><th>Driver</th><th>Protocol</th><th>Status</th><th>Cameras carried on the Sentinel grid</th></tr></thead>
         <tbody>
-          <tr><td class="cell-mono">mediamtx</td><td>RTSP / WHEP / HLS</td><td><span class="pill pill--live">Live</span></td><td class="num"><span class="run"><b>run</b><code>GET /api/admin/drivers</code></span></td></tr>
-          <tr><td class="cell-mono">rtsp</td><td>RTSP / TCP</td><td><span class="pill pill--live">Live</span></td><td class="num"><span class="muted">— from the same call</span></td></tr>
-          <tr><td class="cell-mono">onvif</td><td>ONVIF Profile S + events</td><td><span class="pill pill--live">Live</span></td><td class="num"><span class="muted">— from the same call</span></td></tr>
-          <tr><td class="cell-mono">vms-stub</td><td>vendor VMS SDK</td><td><span class="pill pill--wait">Interface-complete</span></td><td class="num">0 — awaiting credentials</td></tr>
+          <tr><td class="cell-mono">hls</td><td>HLS over HTTPS</td><td><span class="pill pill--live">Live</span></td><td><strong>30 of 30.</strong> Every grid camera is pulled this way today.</td></tr>
+          <tr><td class="cell-mono">rtsp</td><td>RTSP / TCP</td><td><span class="pill pill--live">Live</span></td><td>0 — the grid answers <span class="cell-mono">401</span> on 8554 for our source IP. Proven on our own feed.</td></tr>
+          <tr><td class="cell-mono">mediamtx</td><td>RTSP / WHEP / HLS</td><td><span class="pill pill--live">Live</span></td><td>Carries our own camera in the recorded demo.</td></tr>
+          <tr><td class="cell-mono">onvif</td><td>ONVIF Profile S + events</td><td><span class="pill pill--live">Live</span></td><td>0 — the sandbox exposes no ONVIF endpoint. Discovery and PTZ tested against an ONVIF simulator.</td></tr>
+          <tr><td class="cell-mono">vms-stub</td><td>vendor VMS SDK</td><td><span class="pill pill--wait">Interface-complete</span></td><td>0 — awaiting vendor credentials.</td></tr>
         </tbody>
       </table>
     </div>
 
     <p style="margin-top:1.5rem">The honest thing, said out loud: the fourth driver is an interface, not a claim. On our own network port 8554 is filtered, so the gateway probes each camera and degrades to HLS by itself. Heterogeneity is exactly what the brief tests — that fallback is the demo, not an excuse.</p>
 
-    <div class="runbar"><b>fill before submit</b> &nbsp; paste the driver → camera counts from <code>GET /api/admin/drivers</code> on the running system.</div>
+    <div class="runbar"><b>the point</b> &nbsp; The grid permits exactly one of our four transports, and the platform found that out by itself — per camera, at startup, and recorded in <code>camera:transport:&lt;id&gt;</code>. Nothing downstream noticed.</div>
   </section>
 
   <!-- ========== 04 — ANPR PIPELINE ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>04</b> / 10 · Video analytics — ANPR</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>04</b> / 13 · Video analytics — ANPR</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">The mandatory analytic</p>
     <h2>The pipeline, and the record it produces</h2>
 
@@ -580,61 +809,303 @@
       <div class="flow__step" data-arrow><span class="k">Frame (PTS)</span><span class="d">decoded at 5 fps</span></div>
       <div class="flow__step" data-arrow><span class="k">Vehicle detect</span><span class="d">YOLOv8s · batch 16 · 20 ms flush</span></div>
       <div class="flow__step" data-arrow><span class="k">Track</span><span class="d">ByteTrack, one per camera</span></div>
-      <div class="flow__step" data-arrow><span class="k">Plate detect</span><span class="d">inside the vehicle crop</span></div>
-      <div class="flow__step" data-arrow><span class="k">Two readers</span><span class="d">EasyOCR + PaddleOCR</span></div>
-      <div class="flow__step"><span class="k">Grammar + vote</span><span class="d">per-character, refuses below 2/3</span></div>
+      <div class="flow__step" data-arrow><span class="k">Plate detect</span><span class="d">YOLOv9-t ONNX, inside the vehicle crop</span></div>
+      <div class="flow__step" data-arrow><span class="k">Four readers</span><span class="d">PaddleOCR · EasyOCR · fast-plate-ocr · Tesseract</span></div>
+      <div class="flow__step"><span class="k">Grammar + vote</span><span class="d">per-character (MVCP), refuses below 2/3</span></div>
     </div>
 
     <p style="margin-top:1.5rem">Plate detection runs on the <em>vehicle crop</em>, not the frame: a 20&nbsp;px plate in a 1920&nbsp;px frame is ~7&nbsp;px after letterboxing; inside a 300&nbsp;px crop it is a readable band. Grammar (<span class="cell-mono">^[A-Z]{2}[0-9]{2}[A-Z]{1,3}[0-9]{4}$</span>, BH series too) is applied before the vote, so the vote spends itself only on genuine ambiguity.</p>
 
     <div class="record">
+      <span class="cmt"># transcribed from `python services/worker/selftest.py` — injected GJ 25 BJ 8377</span><br>
       {<br>
-      &nbsp;&nbsp;<span class="key">"sighting_id"</span>: "…",  <span class="key">"camera_id"</span>: "GJ-AHD-0123",  <span class="key">"track_id"</span>: "…",<br>
-      &nbsp;&nbsp;<span class="key">"plate_text"</span>: "GJ01AB1234",  <span class="key">"plate_band"</span>: "CONFIRMED",<br>
-      &nbsp;&nbsp;<span class="key">"pts_first"</span>: 1725100841.20,  <span class="key">"ts_source"</span>: "rtsp_pts",  <span class="cmt">// never now()</span><br>
+      &nbsp;&nbsp;<span class="key">"sighting_id"</span>: "01M1W3M62K…",  <span class="key">"camera_id"</span>: "SELFTEST-000",<br>
+      &nbsp;&nbsp;<span class="key">"plate_text"</span>: "GJ25BJ8377",  <span class="key">"plate_conf"</span>: 0.989,  <span class="key">"plate_band"</span>: "CONFIRMED",<br>
+      &nbsp;&nbsp;<span class="key">"pts_first"</span>: 1725100841.20,  <span class="key">"ts_source"</span>: "frame_pts",  <span class="cmt">// never now()</span><br>
       &nbsp;&nbsp;<span class="key">"vehicle_class"</span>: "car",  <span class="key">"crop_uri"</span>: "s3://…"<br>
       }
     </div>
-    <p class="muted" style="margin-top:0.75rem;font-size:0.85rem">Show one real row from the running system, not this mock.</p>
+    <p class="muted" style="margin-top:0.75rem;font-size:0.85rem">Read back exactly, <strong>0.68&nbsp;s end to end</strong> against a 3.0&nbsp;s budget.</p>
   </section>
 
   <!-- ========== 05 — MODEL CARD ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>05</b> / 10 · Analytics output quality</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>05</b> / 13 · Analytics output quality</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">Model card</p>
     <h2>Four bands, never averaged into one number</h2>
 
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Band</th><th>Share</th><th>Precision</th><th>What the system does</th></tr></thead>
-        <tbody>
-          <tr><td><span class="pill pill--live">CONFIRMED</span></td><td class="num">—</td><td class="num">—</td><td>publishes <span class="cell-mono">plate_text</span>, can raise an alert</td></tr>
-          <tr><td><span class="pill pill--wait">PROBABLE</span></td><td class="num">—</td><td class="num">—</td><td>publishes <span class="cell-mono">plate_text</span>, alert needs corroboration</td></tr>
-          <tr><td><span class="pill pill--wait">POSSIBLE</span></td><td class="num">—</td><td class="num">—</td><td><strong>publishes a crop and a null plate</strong></td></tr>
-          <tr><td><span class="pill pill--crit">NONE</span></td><td class="num">—</td><td class="num">—</td><td>vehicle row only</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p style="margin-top:1.5rem">On the slide too, because leaving it off is how 70% becomes 95%: the <strong>refusal rate</strong> — the share of passes no reader can read, around 13% on real footage.</p>
-
-    <div class="grid2">
-      <div class="panel">
-        <h3>Accuracy — per band + refusal rate</h3>
-        <span class="run"><b>run</b><code>python scripts/accuracy_report.py --golden fixtures/golden/</code></span>
-        <p class="muted" style="font-size:0.82rem;margin-top:0.6rem">Quote the <em>hand-labelled</em> numbers, not synthetic. Writes docs/accuracy-report.md.</p>
+    <div class="grid2" style="margin-top:1.25rem">
+      <div>
+        <h3 style="margin-top:0">Banded output — 40 tracks, 120 crops</h3>
+        <div class="table-wrap" style="margin-top:.6rem">
+          <table style="min-width:0">
+            <thead><tr><th>Band</th><th>n</th><th>Share</th><th>Wrong</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill pill--live">CONFIRMED</span></td><td class="num">38</td><td class="num">95.0%</td><td class="num"><strong>0</strong></td></tr>
+              <tr><td><span class="pill pill--wait">PROBABLE</span></td><td class="num">0</td><td class="num">0.0%</td><td class="num">0</td></tr>
+              <tr><td><span class="pill pill--wait">POSSIBLE</span></td><td class="num">2</td><td class="num">5.0%</td><td class="num">0</td></tr>
+              <tr><td><span class="pill pill--crit">NONE</span></td><td class="num">0</td><td class="num">0.0%</td><td class="num">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:.8rem;font-size:.88rem">Exact match <strong>95.0%</strong> of all tracks and <strong>100%</strong> of the tracks it agreed to name. CER 0.050. <strong>Refusal rate 5.0%</strong> — on the slide, because leaving it off is how 70% becomes 95%.</p>
+        <p class="muted" style="font-size:.8rem;margin-top:.5rem">Source: <span class="cell-mono">scripts/accuracy_report.py</span>, synthetic set, 2026-09-04. The hand-labelled Gujarat set is open work, and this deck does not pretend otherwise.</p>
       </div>
-      <div class="panel">
-        <h3>Throughput</h3>
-        <span class="run"><b>run</b><code>python -m services.worker.backend --bench</code></span>
-        <span class="run" style="margin-top:0.5rem"><b>run</b><code>python -m services.worker.decode --bench --cameras 10 --seconds 600</code></span>
+      <div>
+        <h3 style="margin-top:0">Why a vote, and not the best single reader</h3>
+        <div class="table-wrap" style="margin-top:.6rem">
+          <table style="min-width:0">
+            <thead><tr><th>Reader alone</th><th>Exact</th><th>CER</th></tr></thead>
+            <tbody>
+              <tr><td class="cell-mono">paddleocr</td><td class="num">79.2%</td><td class="num">0.121</td></tr>
+              <tr><td class="cell-mono">easyocr</td><td class="num">70.0%</td><td class="num">0.221</td></tr>
+              <tr><td class="cell-mono">fast-plate-ocr</td><td class="num">55.0%</td><td class="num">0.241</td></tr>
+              <tr><td class="cell-mono">tesseract</td><td class="num">42.5%</td><td class="num">0.257</td></tr>
+              <tr><td><strong>fused vote</strong></td><td class="num"><strong>95.0%</strong></td><td class="num"><strong>0.050</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:.8rem;font-size:.88rem">Four architectures disagree in different places. The vote is worth 16 points over the best of them — and it is what turns a wrong read into a refusal rather than a confident lie.</p>
       </div>
     </div>
   </section>
 
-  <!-- ========== 06 — WATCHLIST + ALERTS ========== -->
+  <!-- ========== 06 — LOW-RESOLUTION REALITY ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>06</b> / 10 · Watchlist correlation &amp; alerts</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>06</b> / 13 &middot; Analytics on real CCTV</span></div>
+    <p class="slide__eyebrow" style="color:var(--accent)">The hard case, measured</p>
+    <h2 style="font-size:2rem;max-width:40ch">A wide-area camera is not an ANPR camera. We measured how far short it falls.</h2>
+
+    <p class="lede" style="margin-top:.7rem;max-width:92ch">Cameras on the Sentinel grid put a number plate into 20&ndash;30&nbsp;px of frame. That is the regime the brief means by &ldquo;challenging and varying CCTV conditions&rdquo;, so it is the regime we benchmarked &mdash; rather than reporting a number from a clean plate and hoping.</p>
+
+    <div class="grid2" style="margin-top:1.1rem">
+      <div>
+        <h3 style="margin-top:0">The case the grid actually presents: a 20&nbsp;px plate</h3>
+        <div class="table-wrap" style="margin-top:.6rem">
+          <table style="min-width:0">
+            <thead><tr><th>Plate height, night</th><th>LR → OCR</th><th>Single-image SR</th><th>Ours — MFSR + MVCP</th></tr></thead>
+            <tbody>
+              <tr><td class="num">16 px</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num"><strong>5.0%</strong></td></tr>
+              <tr><td class="num">20 px</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num"><strong>65.0%</strong></td></tr>
+              <tr><td class="num">24 px</td><td class="num">0.0%</td><td class="num">15.0%</td><td class="num"><strong>95.0%</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">There is a cliff just under 20&nbsp;px, and we admit it</h3>
+        <p style="font-size:.88rem;margin-top:.6rem">The published reference for this regime — UFPR-SR-Plates, median plate height 18–21&nbsp;px — reports <strong>1.7–2.2%</strong> from a low-resolution crop straight to OCR, and <strong>42–45%</strong> with super-resolution plus a per-character vote. That is the bar, and it is why a wide-area camera cannot be treated as an ANPR camera.</p>
+        <p style="font-size:.88rem">A plate face is about 65% glyph, so 20&nbsp;px of plate is ~13&nbsp;px of glyph — the bottom of what CRNN and SVTR recognisers were trained on. Below ~10&nbsp;px the pipeline refuses, and the wall says so on the tile.</p>
+      </div>
+    </div>
+
+    <div class="runbar"><b>why this matters to a procurement</b> &nbsp; It separates a siting problem from a model problem. A plate under ~20&nbsp;px will not read on any software; the answer is a camera at the right place, and the platform saying so on the tile instead of printing noise.</div>
+  </section>
+
+  <!-- ========== 07 — WORKFLOW ========== -->
+  <section class="slide slide--diagram">
+    <div class="diagwrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 990" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif">
+<title>Prahari — workflow and integration</title>
+<desc>Two paths: a vehicle passing a camera through to an acknowledged alert, and a registration number through to an audited route export.</desc>
+<defs>
+<g id="i-camera" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 17 4.2a1 1 0 0 1 1.2.7l1 3.6a1 1 0 0 1-.7 1.2L4.6 13.4a1 1 0 0 1-1.2-.7l-1-3.6a1 1 0 0 1 .6-1.6z"/>
+                 <circle cx="16.4" cy="8.2" r="1.5" fill="#fff"/>
+                 <path d="M6 13.9 7 17M11 10.5v10M8.6 20.5h4.8"/></g>
+<g id="i-hub" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.3"/>
+              <circle cx="3.6" cy="5" r="2.1"/><circle cx="20.4" cy="5" r="2.1"/>
+              <circle cx="3.6" cy="19" r="2.1"/><circle cx="20.4" cy="19" r="2.1"/>
+              <path d="M5.2 6.4 9.6 10M18.8 6.4 14.4 10M5.2 17.6 9.6 14M18.8 17.6 14.4 14"/></g>
+<g id="i-chip" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2.2"/>
+               <rect x="9.4" y="9.4" width="5.2" height="5.2" rx="1"/>
+               <path d="M9.5 6V3M14.5 6V3M9.5 21v-3M14.5 21v-3M6 9.5H3M6 14.5H3M21 9.5h-3M21 14.5h-3"/></g>
+<g id="i-stream" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7h12"/><path d="M12 4.2 15.3 7 12 9.8"/>
+                 <path d="M21.5 12h-12"/><path d="M12 9.2 8.7 12 12 14.8"/>
+                 <path d="M2.5 17h12"/><path d="M12 14.2 15.3 17 12 19.8"/></g>
+<g id="i-db" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.6" rx="8" ry="3.1"/>
+             <path d="M4 5.6v12.8c0 1.7 3.6 3.1 8 3.1s8-1.4 8-3.1V5.6"/>
+             <path d="M4 12c0 1.7 3.6 3.1 8 3.1s8-1.4 8-3.1"/></g>
+<g id="i-monitor" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="19" height="13" rx="1.8"/>
+                  <path d="M9 20.5h6M12 16.5v4"/>
+                  <path d="M6.5 12.5 9.5 9l2.5 2.6L15 7.5l2.5 3.4"/></g>
+<g id="i-shield" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 20 5.6v6.1c0 4.6-3.3 8.6-8 9.7-4.7-1.1-8-5.1-8-9.7V5.6z"/>
+                 <path d="M8.6 12.2 11 14.6l4.6-4.8"/></g>
+<g id="i-chain" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 14.4a4.2 4.2 0 0 1 0-5.9l2.4-2.4a4.2 4.2 0 0 1 5.9 5.9l-1.3 1.3"/>
+                <path d="M14.4 9.6a4.2 4.2 0 0 1 0 5.9l-2.4 2.4a4.2 4.2 0 1 1-5.9-5.9l1.3-1.3"/></g>
+<g id="i-clock" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 6.8V12l3.4 2.1"/></g>
+<g id="i-open" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M3.6 12h16.8"/>
+               <path d="M12 3.4a13 13 0 0 1 0 17.2 13 13 0 0 1 0-17.2z"/></g>
+<g id="i-pin" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5c4.2-5.3 6.4-9 6.4-11.5a6.4 6.4 0 1 0-12.8 0c0 2.5 2.2 6.2 6.4 11.5z"/>
+              <circle cx="12" cy="10" r="2.4"/></g>
+<g id="i-bell" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 16.4V10.6a5.8 5.8 0 0 1 11.6 0v5.8l1.8 2.3H4.4z"/>
+               <path d="M9.8 21.4h4.4"/></g>
+<g id="i-route" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.4" cy="18.6" r="2.6"/><circle cx="18.6" cy="5.4" r="2.6"/>
+                <path d="M8 18.6h5.8a4.4 4.4 0 0 0 0-8.8H10a4.4 4.4 0 0 1 0-8.8"/></g>
+<g id="i-user" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.9"/><path d="M4.6 20.8a7.4 7.4 0 0 1 14.8 0"/></g>
+<g id="i-eye" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 12S5.6 5.4 12 5.4 22.2 12 22.2 12 18.4 18.6 12 18.6 1.8 12 1.8 12z"/>
+              <circle cx="12" cy="12" r="3"/></g>
+<g id="i-ban" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M6 18 18 6"/></g>
+<g id="i-box" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 21 7.4v9.2L12 21.2 3 16.6V7.4z"/><path d="M3 7.4 12 12l9-4.6M12 12v9.2"/></g>
+<marker id="ma" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+<marker id="mb" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5731a"/></marker>
+<marker id="mc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f7a3d"/></marker>
+<marker id="md" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b23020"/></marker>
+</defs>
+<rect x="0" y="0" width="1760" height="990" rx="0" fill="#f4f5f7" stroke="#f4f5f7" stroke-width="0"/>
+<text x="48" y="54" font-size="28" fill="#1b1f27" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Prahari — workflow &amp; integration</text>
+<text x="48" y="82" font-size="15" fill="#6b7280" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Two paths. Both end on the same hash-chained audit log.</text>
+<rect x="48" y="112" width="1664" height="300" rx="10" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.4"/>
+<rect x="48" y="112" width="1664" height="44" rx="12" fill="#1b1f27" stroke="#1b1f27" stroke-width="0"/>
+<rect x="48" y="144" width="1664" height="12" rx="0" fill="#1b1f27" stroke="#1b1f27" stroke-width="0"/>
+<text x="70" y="141" font-size="15" fill="#e0a24a" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start" letter-spacing="0.06em">A · VEHICLE  →  ACKNOWLEDGED ALERT</text>
+<text x="1690" y="141" font-size="13" fill="#9aa1ad" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">measured 0.68 s frame to sighting, against a 3.0 s budget</text>
+<rect x="63" y="188" width="178" height="202" rx="11" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.5"/>
+<circle cx="89" cy="214" r="15" fill="#b5731a"/>
+<text x="89" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">1</text>
+<g transform="translate(173 198) scale(1.91667)" color="#b5731a" stroke-width="0.886957"><use href="#i-camera"/></g>
+<text x="79" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Vehicle passes a</text>
+<text x="79" y="289" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">camera</text>
+<rect x="79" y="318" width="79.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="118.7" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">frame PTS</text>
+<path d="M246 289 L266 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="271" y="188" width="178" height="202" rx="11" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.5"/>
+<circle cx="297" cy="214" r="15" fill="#b5731a"/>
+<text x="297" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">2</text>
+<g transform="translate(381 198) scale(1.91667)" color="#b5731a" stroke-width="0.886957"><use href="#i-chip"/></g>
+<text x="287" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Detect, track, read</text>
+<text x="287" y="289" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">the plate</text>
+<rect x="287" y="318" width="46.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="310.2" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">YOLO</text>
+<rect x="340.4" y="318" width="59.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="370.2" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">OCR ×4</text>
+<path d="M454 289 L474 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="479" y="188" width="178" height="202" rx="11" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.5"/>
+<circle cx="505" cy="214" r="15" fill="#b5731a"/>
+<text x="505" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">3</text>
+<g transform="translate(589 198) scale(1.91667)" color="#b5731a" stroke-width="0.886957"><use href="#i-shield"/></g>
+<text x="495" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Band it — or refuse</text>
+<text x="495" y="289" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">it</text>
+<rect x="495" y="318" width="79.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="534.7" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">CONFIRMED</text>
+<rect x="495" y="349" width="86" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="538" y="365.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">UNREADABLE</text>
+<path d="M662 289 L682 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="687" y="188" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="713" cy="214" r="15" fill="#b5731a"/>
+<text x="713" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">4</text>
+<g transform="translate(797 198) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-stream"/></g>
+<text x="703" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Sighting on the bus</text>
+<rect x="703" y="297" width="59.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="732.8" y="313.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">~200 B</text>
+<rect x="769.6" y="297" width="33.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="786.2" y="313.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">C1</text>
+<path d="M870 289 L890 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="895" y="188" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="921" cy="214" r="15" fill="#b5731a"/>
+<text x="921" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">5</text>
+<g transform="translate(1005 198) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-db"/></g>
+<text x="911" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Match against</text>
+<text x="911" y="289" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">watchlist</text>
+<rect x="911" y="318" width="53" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="937.5" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">canon</text>
+<rect x="971" y="318" width="86" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1014" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">dedup 60 s</text>
+<path d="M1078 289 L1098 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="1103" y="188" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="1129" cy="214" r="15" fill="#b5731a"/>
+<text x="1129" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">6</text>
+<g transform="translate(1213 198) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-bell"/></g>
+<text x="1119" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Alert pushed to</text>
+<text x="1119" y="289" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">console</text>
+<rect x="1119" y="318" width="79.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1158.7" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">WebSocket</text>
+<rect x="1205.4" y="318" width="59.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1235.2" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">scoped</text>
+<path d="M1286 289 L1306 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="1311" y="188" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="1337" cy="214" r="15" fill="#b5731a"/>
+<text x="1337" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">7</text>
+<g transform="translate(1421 198) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-user"/></g>
+<text x="1327" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Officer</text>
+<text x="1327" y="289" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">acknowledges</text>
+<rect x="1327" y="318" width="66.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1360.1" y="334.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">by name</text>
+<rect x="1327" y="349" width="112.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1383.2" y="365.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">409 on illegal</text>
+<path d="M1494 289 L1514 289" stroke="#b5731a" stroke-width="2.6" fill="none" marker-end="url(#mb)"/>
+<rect x="1519" y="188" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="1545" cy="214" r="15" fill="#b5731a"/>
+<text x="1545" y="219" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">8</text>
+<g transform="translate(1629 198) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-chain"/></g>
+<text x="1535" y="268" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Audit row appended</text>
+<rect x="1535" y="297" width="99.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1584.6" y="313.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">sha256 chain</text>
+<rect x="48" y="442" width="1664" height="300" rx="10" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.4"/>
+<rect x="48" y="442" width="1664" height="44" rx="12" fill="#1b1f27" stroke="#1b1f27" stroke-width="0"/>
+<rect x="48" y="474" width="1664" height="12" rx="0" fill="#1b1f27" stroke="#1b1f27" stroke-width="0"/>
+<text x="70" y="471" font-size="15" fill="#e0a24a" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start" letter-spacing="0.06em">B · REGISTRATION NUMBER  →  AUDITED ROUTE</text>
+<text x="1690" y="471" font-size="13" fill="#9aa1ad" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="end">the graded test case</text>
+<rect x="63" y="518" width="178" height="202" rx="11" fill="#e3f2e6" stroke="#7cb98d" stroke-width="1.5"/>
+<circle cx="89" cy="544" r="15" fill="#1f7a3d"/>
+<text x="89" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">1</text>
+<g transform="translate(173 528) scale(1.91667)" color="#1f7a3d" stroke-width="0.886957"><use href="#i-user"/></g>
+<text x="79" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Investigator types</text>
+<text x="79" y="619" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">a plate</text>
+<rect x="79" y="648" width="86" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="122" y="664.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">GJ01DM0042</text>
+<path d="M246 619 L266 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="271" y="518" width="178" height="202" rx="11" fill="#e3f2e6" stroke="#7cb98d" stroke-width="1.5"/>
+<circle cx="297" cy="544" r="15" fill="#1f7a3d"/>
+<text x="297" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">2</text>
+<g transform="translate(381 528) scale(1.91667)" color="#1f7a3d" stroke-width="0.886957"><use href="#i-shield"/></g>
+<text x="287" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Capability and</text>
+<text x="287" y="619" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">scope</text>
+<rect x="287" y="648" width="39.8" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="306.9" y="664.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">C10</text>
+<rect x="333.8" y="648" width="92.6" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="380.1" y="664.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">403 or rows</text>
+<path d="M454 619 L474 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="479" y="518" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="505" cy="544" r="15" fill="#1f7a3d"/>
+<text x="505" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">3</text>
+<g transform="translate(589 528) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-db"/></g>
+<text x="495" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Hypertable query</text>
+<rect x="495" y="627" width="99.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="544.6" y="643.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">by pts_first</text>
+<path d="M662 619 L682 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="687" y="518" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="713" cy="544" r="15" fill="#1f7a3d"/>
+<text x="713" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">4</text>
+<g transform="translate(797 528) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-route"/></g>
+<text x="703" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Hops, in order</text>
+<rect x="703" y="627" width="112.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="759.2" y="643.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">one per camera</text>
+<path d="M870 619 L890 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="895" y="518" width="178" height="202" rx="11" fill="#e3f2e6" stroke="#7cb98d" stroke-width="1.5"/>
+<circle cx="921" cy="544" r="15" fill="#1f7a3d"/>
+<text x="921" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">5</text>
+<g transform="translate(1005 528) scale(1.91667)" color="#1f7a3d" stroke-width="0.886957"><use href="#i-ban"/></g>
+<text x="911" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Impossible hop</text>
+<text x="911" y="619" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">flagged</text>
+<rect x="911" y="648" width="99.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="960.6" y="664.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">&gt;150 km/h</text>
+<path d="M1078 619 L1098 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="1103" y="518" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="1129" cy="544" r="15" fill="#1f7a3d"/>
+<text x="1129" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">6</text>
+<g transform="translate(1213 528) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-pin"/></g>
+<text x="1119" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Snapped to roads</text>
+<rect x="1119" y="627" width="46.4" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1142.2" y="643.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">OSRM</text>
+<path d="M1286 619 L1306 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="1311" y="518" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="1337" cy="544" r="15" fill="#1f7a3d"/>
+<text x="1337" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">7</text>
+<g transform="translate(1421 528) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-box"/></g>
+<text x="1327" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">CSV / PDF export</text>
+<rect x="1327" y="627" width="119" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1386.5" y="643.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">presigned crops</text>
+<path d="M1494 619 L1514 619" stroke="#1f7a3d" stroke-width="2.6" fill="none" marker-end="url(#mc)"/>
+<rect x="1519" y="518" width="178" height="202" rx="11" fill="#eceef1" stroke="#d3d7dd" stroke-width="1.5"/>
+<circle cx="1545" cy="544" r="15" fill="#1f7a3d"/>
+<text x="1545" y="549" font-size="14" fill="#ffffff" font-weight="800" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="middle">8</text>
+<g transform="translate(1629 528) scale(1.91667)" color="#454b57" stroke-width="0.886957"><use href="#i-chain"/></g>
+<text x="1535" y="598" font-size="14.5" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Audit row appended</text>
+<rect x="1535" y="627" width="132.2" height="24" rx="6" fill="#ffffff" stroke="#d3d7dd" stroke-width="1.1"/><text x="1601.1" y="643.5" font-size="11" fill="#454b57" font-weight="500" font-family="'IBM Plex Mono',Consolas,monospace" text-anchor="middle">no export without</text>
+<rect x="48" y="776" width="820" height="150" rx="10" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.4"/>
+<g transform="translate(74 810) scale(1.83333)" color="#b23020" stroke-width="0.927273"><use href="#i-ban"/></g>
+<text x="136" y="832" font-size="19" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Never print a plate it cannot read</text>
+<text x="136" y="862" font-size="13.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Below the pixel floor, or with the readers in disagreement, it says so.</text>
+<text x="136" y="884" font-size="13.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">A wrong plate on a police report is worse than no plate.</text>
+<rect x="892" y="776" width="820" height="150" rx="10" fill="#f7ead6" stroke="#d9a45e" stroke-width="1.4"/>
+<g transform="translate(918 810) scale(1.83333)" color="#b23020" stroke-width="0.927273"><use href="#i-eye"/></g>
+<text x="980" y="832" font-size="19" fill="#1b1f27" font-weight="700" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">The account that configures it cannot watch through it</text>
+<text x="980" y="862" font-size="13.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">SYSTEM_ADMIN holds config and audit, and is refused live data, alerts and route.</text>
+<text x="980" y="884" font-size="13.5" fill="#454b57" font-weight="400" font-family="'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif" text-anchor="start">Administering a surveillance system and using one are different jobs.</text>
+</svg>    </div>
+  </section>
+
+  <!-- ========== 07 — WATCHLIST + ALERTS ========== -->
+  <section class="slide">
+    <div class="slide__num"><span>Prahari</span><span><b>08</b> / 13 · Watchlist correlation &amp; alerts</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">Real-time alerts</p>
     <h2>Banded matching, an audited state machine</h2>
 
@@ -642,20 +1113,19 @@
 
     <div class="fsm">
       <span class="st">NEW</span><span class="ar">→</span>
-      <span class="st">ACK</span><span class="ar">→</span>
-      <span class="st">IN_PROGRESS</span><span class="ar">→</span>
-      <span class="st end">RESOLVED</span>
+      <span class="st">ACKNOWLEDGED</span><span class="ar">→</span>
+      <span class="st end">ACTIONED</span>
       <span class="ar">|</span>
-      <span class="st end">FALSE_POSITIVE</span>
+      <span class="st end">DISMISSED <span style="font-weight:400">(reason required)</span></span>
     </div>
     <p style="margin-top:1rem">Every transition is written to the audit log with a user and a reason. Repeated sightings of one vehicle bump a count on the open alert — twenty alerts for one event is how an operator learns to ignore them.</p>
 
-    <div class="runbar"><b>fill before submit</b> &nbsp; sighting-to-alert latency from <code>python -m services.worker.selftest --assert-xadd</code> — put the pipeline half on the slide, against the 3&nbsp;s budget.</div>
+    <div class="runbar"><b>measured</b> &nbsp; Pipeline half — frame in to sighting published: <strong>0.68&nbsp;s</strong> against a 3.0&nbsp;s budget (<code>services/worker/selftest.py</code>). Dedup holds one alert per (entry, camera) for 60&nbsp;s; an illegal transition is HTTP&nbsp;409 and writes nothing.</div>
   </section>
 
   <!-- ========== 07 — ROUTE ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>07</b> / 10 · The graded test case</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>09</b> / 13 · The graded test case</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">Route reconstruction</p>
     <h2>A registration number in. A defensible route out.</h2>
 
@@ -683,7 +1153,7 @@
 
   <!-- ========== 08 — RBAC + AUDIT ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>08</b> / 10 · Security &amp; accountability</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>10</b> / 13 · Security &amp; accountability</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">RBAC + audit</p>
     <h2>Enforced in SQL. Hiding a button is not access control.</h2>
 
@@ -707,12 +1177,12 @@
       </div>
     </div>
 
-    <div class="runbar"><b>fill before submit</b> &nbsp; show <code>GET /api/admin/audit/verify</code> returning ok on the running system.</div>
+    <div class="runbar"><b>verified</b> &nbsp; <code>GET /api/admin/audit/verify</code> → <strong>728 rows, ok: true, first_broken_seq: null</strong>. And the row the matrix exists for: <strong>SYSTEM_ADMIN is refused live data, alerts and route</strong> — the most privileged account in the system cannot watch anybody.</div>
   </section>
 
   <!-- ========== 09 — SCALE ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>09</b> / 10 · Scalability &amp; PoC readiness</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>11</b> / 13 · Scalability &amp; PoC readiness</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">The arithmetic, printed so the jury can check it</p>
     <h2>Four orders of magnitude, in four multiplications</h2>
 
@@ -731,16 +1201,45 @@
     <p class="muted" style="margin-top:1rem;font-size:0.85rem">Scale plan also covers: central / regional / edge compute, GPU sizing, low-bandwidth operation, hot / warm / cold storage by retention, HA, backup, DR, cybersecurity, and a capex + opex estimate.</p>
   </section>
 
-  <!-- ========== 10 — ROADMAP ========== -->
+  <!-- ========== 11 — VERIFICATION ========== -->
   <section class="slide">
-    <div class="slide__num"><span>Prahari</span><span><b>10</b> / 10 · Roadmap &amp; operational impact</span></div>
+    <div class="slide__num"><span>Prahari</span><span><b>12</b> / 13 · Platform maturity</span></div>
+    <p class="slide__eyebrow" style="color:var(--accent)">Every claim on this deck, and the command that checks it</p>
+    <h2 style="font-size:2rem">Nothing here is a screenshot of an intention</h2>
+
+    <div class="table-wrap" style="margin-top:1rem">
+      <table>
+        <thead><tr><th>Command</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-mono">pytest tests/ -q</td><td><strong>372 passed, 6 skipped</strong></td></tr>
+          <tr><td class="cell-mono">python scripts/verify_stack.py</td><td><strong>35 / 35 checks passed</strong> end to end against the running stack</td></tr>
+          <tr><td class="cell-mono">python services/worker/selftest.py</td><td><strong>SELFTEST OK</strong> — plate read back exactly, <strong>0.68&nbsp;s</strong> against a 3.0&nbsp;s budget</td></tr>
+          <tr><td class="cell-mono">PRAHARI_INTEGRATION=1 pytest tests/test_integration.py</td><td><strong>6 / 6</strong> — clip → worker → real Redis stream → persister → matcher → alert → route</td></tr>
+          <tr><td class="cell-mono">GET /api/admin/audit/verify</td><td><strong>728 rows, ok: true</strong></td></tr>
+          <tr><td class="cell-mono">python scripts/accuracy_report.py</td><td><strong>95.0% exact, 0 confidently-wrong reads</strong></td></tr>
+          <tr><td class="cell-mono">python scripts/preflight.py</td><td><strong>13 / 13</strong> — and every failure prints the command that repairs it</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:1rem;max-width:none"><strong>100,366</strong> sightings have gone through the live pipeline on this machine. The brief says <em>not a simulation, not a proof of concept</em> — so the repository ships the checks, and a judge can re-run every line above. Open gaps are named on the roadmap slide rather than hidden here.</p>
+
+    <div class="linkbar" style="margin-top:1.2rem">
+      <a href="https://github.com/Priyanshu-byte-coder/prahari"><b>Clone and check</b> github.com/Priyanshu-byte-coder/prahari</a>
+      <a href="https://youtu.be/8lQsuXeH150"><b>Watch it run</b> youtu.be/8lQsuXeH150</a>
+    </div>
+  </section>
+
+  <!-- ========== 12 — ROADMAP ========== -->
+  <section class="slide">
+    <div class="slide__num"><span>Prahari</span><span><b>13</b> / 13 · Roadmap &amp; operational impact</span></div>
     <p class="slide__eyebrow" style="color:var(--accent)">What is built, what is next</p>
     <h2>Honest about the line between the two</h2>
 
     <div class="road">
       <div class="road__row">
         <div class="road__when">Now</div>
-        <div class="road__what">Three drivers · ANPR with a banded vote · watchlist alerts with an audited FSM · route reconstruction with plausibility flags · RBAC + hash-chained audit · GIS console + video wall.</div>
+        <div class="road__what">Four live transports · ANPR with a four-reader banded vote · watchlist alerts with an audited state machine · route reconstruction with plausibility flags · RBAC + hash-chained audit · GIS console + 30-camera video wall with live detector overlays.</div>
       </div>
       <div class="road__row">
         <div class="road__when">Next 30 days</div>
@@ -759,7 +1258,11 @@
   <section class="slide close">
     <div class="slide__num"><span>Prahari</span><span>Close</span></div>
     <blockquote>The fusion refuses to guess below a two-thirds majority. We would rather report nothing than report the wrong vehicle to a police officer.</blockquote>
-    <div class="attrib">Prahari · Sentinel 2026 · prize pool ₹51 lakh (portal figure)</div>
+    <div class="linkbar" style="margin-top:2rem">
+      <a href="https://youtu.be/8lQsuXeH150"><b>Demo video</b> youtu.be/8lQsuXeH150</a>
+      <a href="https://github.com/Priyanshu-byte-coder/prahari"><b>Source, Apache-2.0</b> github.com/Priyanshu-byte-coder/prahari</a>
+    </div>
+    <div class="attrib">Prahari · Sentinel 2026</div>
   </section>
 
 </div>

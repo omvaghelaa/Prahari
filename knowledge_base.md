@@ -721,6 +721,7 @@ changing one without a line here breaks somebody else's lane silently.
 - 08-29 | G1 | scripts/probe_grid.py, data/cameras.seed.json, data/catalogue/ingest.json.bootstrap | seed built and verified (`--check`); grid host was 502, used salvaged catalogue as bootstrap
 
 ### lane D
+- 10-26 | repository history | `.git` refs | rewrote all `main` commits to the repository owner's identity and force-pushed to the new remote
 - 09-13 | submission pack | docs/deck.html, docs/hld.html, docs/diagrams/, scripts/build_submission.py,
   submission/ | Deliverables 1-3 built: presentation (15pp, 16:9), HLD (14pp, A4), architecture and
   workflow diagrams (1pp each, also PNG + SVG). Deck placeholders replaced with measured numbers —
